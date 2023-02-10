@@ -1,0 +1,30 @@
+
+
+Keys
+
+A  | Z  | 
+B  | P  | 
+C  | M  | 
+D  | A  | 
+E  | X  | 
+F  | R  | 
+G  | K  | 
+H  | F  | 
+I  | U  | 
+J  | E  | 
+K  | O  | 
+L  | J  | 
+M  | N  | 
+N  | G  | 
+O  | C  | 
+P  | B  | 
+Q  | I  | 
+R  | Q  | 
+S  | T  | 
+T  | H  | 
+U  | V  | 
+V  | L  | 
+W  | D  | 
+X  | S  | 
+Y  | Y  | 
+Z  | W  | 

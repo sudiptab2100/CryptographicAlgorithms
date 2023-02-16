@@ -22,24 +22,6 @@ def KSA(key):
         j = (j + S[i] + ord(key[i % n])) % 256
         S[i], S[j] = S[j], S[i]
     return S
-# for i := 0 to 255 do
-# j := (j + S[i] + k[i mod (size of k)]) mod 256
-# Swap (S[i], S[j])
-
-# from creds import key
-# print(KSA(key))
-
-# Pseudorandom Generation Algorithm (PRGA): Output: z
-# begin
-# i := 0
-# j := 0
-# while(1)
-#   i := (i + 1) mod 256
-#   j := (j + S[i]) mod 256
-#   Swap(S[i], S[j])
-#   z := S[(S[i] + S[j]) mod 256]
-# do
-# end
 
 def PRGA(S, i, j):
     i = (i + 1) % 256
@@ -48,6 +30,3 @@ def PRGA(S, i, j):
     S[i], S[j] = S[j], S[i]
     z = S[(S[i] + S[j]) % 256]
     return format(z, '08b'), i, j
-
-
-# print(XOR('1011', '1100'))

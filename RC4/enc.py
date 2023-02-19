@@ -8,10 +8,11 @@ def enc(msg, key):
     streamLen = len(msgStream)
 
     S = KSA(key)
-    i = j = 0
-    for k in range(0, streamLen, 8):
-        z, i, j = PRGA(S, i, j)
+    k = 0
+    for z in PRGA(S):
         op += XOR(msgStream[k : k + 8], z)
+        k += 8
+        if k >= streamLen: break
     
     return op
 

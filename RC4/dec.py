@@ -6,11 +6,11 @@ def dec(cipherStream, key):
     streamLen = len(cipherStream)
 
     S = KSA(key)
-    i = j = 0
-    for k in range(0, streamLen, 8):
-        z, i, j = PRGA(S, i, j)
-        c = chr(int(XOR(cipherStream[k : k + 8], z), 2))
-        op += c
+    k = 0
+    for z in PRGA(S):
+        op += chr(int(XOR(cipherStream[k : k + 8], z), 2))
+        k += 8
+        if k >= streamLen: break
     
     return op
 

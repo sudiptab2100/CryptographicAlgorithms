@@ -1,7 +1,7 @@
 import binascii
 
-LFSR = [0] * 80
-NFSR = [0] * 80
+Y = [0] * 80
+X = [0] * 80
 
 def breakInSlabs(s, n):
     s_len = len(s)
@@ -25,49 +25,59 @@ def toStr(bits, encoding='utf-8', errors='surrogatepass'):
     
     return op
 
+def g(X):
+    return X[0] ^ X[63] ^ X[60] ^ X[52] ^ X[45] ^ X[37] ^ X[33] ^ X[28] ^ X[21] ^ X[15] ^ X[19] ^ X[0] ^ X[63] & X[60] ^ X[37] & X[33] ^ X[15] & X[9] ^ X[60] & X[52] & X[45] ^ X[33] & X[28] & X[21] ^ X[63] & X[45] & X[28] & X[9] ^ X[60] & X[52] & X[37] & X[33] ^ X[63] & X[60] & X[21] & X[15] ^ X[63] & X[60] & X[52] & X[45] & X[37] ^ X[33] & X[28] & X[21] & X[15] & X[9] ^ X[52] & X[45] & X[37] & X[33] & X[28] & X[21]
+
+def f(Y):
+    return Y[62] ^ Y[51] ^ Y[38] ^ Y[23] ^ Y[13] ^ Y[0]
+
+def h(X, Y):
+    x0 = Y[0]
+    x1 = Y[25]
+    x2 = Y[46]
+    x3 = Y[64]
+    x4 = X[63]
+    return x1 ^ x4 ^ x0 & x3 ^ x2 & x3 ^ x3 & x3 ^ x0 & x1 & x2 ^ x0 & x2 & x3 ^ x0 & x2 & x4 ^ x1 & x2 & x4 ^ x2 & x3 & x4
+
 def clock():
-    hx = 0
-    fx = 0
+    hxy = 0
+    fy = 0
     gx = 0
-    global LFSR
-    global NFSR
+
+    global Y
+    global X
+
     for ix in range(160):
-        fx = LFSR[62] ^ LFSR[51] ^ LFSR[38] ^ LFSR[23] ^ LFSR[13] ^ LFSR[0] ^ hx
-        gx = hx ^ NFSR[0] ^ NFSR[63] ^ NFSR[60] ^ NFSR[52] ^ NFSR[45] ^ NFSR[37] ^ NFSR[33] ^ NFSR[28] ^ NFSR[21] ^ NFSR[15] ^ NFSR[19] ^ NFSR[0] ^ NFSR[63] & NFSR[60] ^ NFSR[37] & NFSR[33] ^ NFSR[15] & NFSR[9] ^ NFSR[60] & NFSR[52] & NFSR[45] ^ NFSR[33] & NFSR[28] & NFSR[21] ^ NFSR[63] & NFSR[45] & NFSR[28] & NFSR[9] ^ NFSR[60] & NFSR[52] & NFSR[37] & NFSR[33] ^ NFSR[63] & NFSR[60] & NFSR[21] & NFSR[15] ^ NFSR[63] & NFSR[60] & NFSR[52] & NFSR[45] & NFSR[37] ^ NFSR[33] & NFSR[28] & NFSR[21] & NFSR[15] & NFSR[9] ^ NFSR[52] & NFSR[45] & NFSR[37] & NFSR[33] & NFSR[28] & NFSR[21]
-        x0 = LFSR[0]
-        x1 = LFSR[25]
-        x2 = LFSR[46]
-        x3 = LFSR[64]
-        x4 = NFSR[63]
-        hx = x1 ^ x4 ^ x0 & x3 ^ x2 & x3 ^ x3 & x3 ^ x0 & x1 & x2 ^ x0 & x2 & x3 ^ x0 & x2 & x4 ^ x1 & x2 & x4 ^ x2 & x3 & x4
-        LFSR[:-1] = LFSR[1:]
-        LFSR[-1] = fx
-        NFSR[:-1] = NFSR[1:]
-        NFSR[-1] = gx
+        fy = f(Y) ^ hxy
+        gx = hxy ^ g(X)
+        hxy = h(X, Y)
+
+        Y[:-1] = Y[1:]
+        Y[-1] = fy
+        X[:-1] = X[1:]
+        X[-1] = gx
 
 def init(iv, key):
-    iv_bin = toBits(iv)
+    iv_bin = toBits(iv)[:80]
     key_bin = toBits(key)[:80]
     
-    for i in range(len(iv_bin)): LFSR[i] = int(iv_bin[i])
-    for i in range(64, 80): LFSR[i] = 1
-    for i in range(len(key_bin)): NFSR[i] = int(key_bin[i])
+    for i in range(len(iv_bin)): Y[i] = int(iv_bin[i])
+    for i in range(64, 80): Y[i] = 1
+
+    for i in range(len(key_bin)): X[i] = int(key_bin[i])
 
     clock()
 
 def genKeyStream():
-    hx = 0
+    hxy = 0
     while True:
-        fx = LFSR[62] ^ LFSR[51] ^ LFSR[38] ^ LFSR[23] ^ LFSR[13] ^ LFSR[0]
-        gx = NFSR[0] ^ NFSR[63] ^ NFSR[60] ^ NFSR[52] ^ NFSR[45] ^ NFSR[37] ^ NFSR[33] ^ NFSR[28] ^ NFSR[21] ^ NFSR[15] ^ NFSR[19] ^ NFSR[0] ^ NFSR[63] & NFSR[60] ^ NFSR[37] & NFSR[33] ^ NFSR[15] & NFSR[9] ^ NFSR[60] & NFSR[52] & NFSR[45] ^ NFSR[33] & NFSR[28] & NFSR[21] ^ NFSR[63] & NFSR[45] & NFSR[28] & NFSR[9] ^ NFSR[60] & NFSR[52] & NFSR[37] & NFSR[33] ^ NFSR[63] & NFSR[60] & NFSR[21] & NFSR[15] ^ NFSR[63] & NFSR[60] & NFSR[52] & NFSR[45] & NFSR[37] ^ NFSR[33] & NFSR[28] & NFSR[21] & NFSR[15] & NFSR[9] ^ NFSR[52] & NFSR[45] & NFSR[37] & NFSR[33] & NFSR[28] & NFSR[21]
-        x0 = LFSR[0]
-        x1 = LFSR[25]
-        x2 = LFSR[46]
-        x3 = LFSR[64]
-        x4 = NFSR[63]
-        hx = x1 ^ x4 ^ x0 & x3 ^ x2 & x3 ^ x3 & x3 ^ x0 & x1 & x2 ^ x0 & x2 & x3 ^ x0 & x2 & x4 ^ x1 & x2 & x4 ^ x2 & x3 & x4
-        LFSR[:-1] = LFSR[1:]
-        LFSR[-1] = fx
-        NFSR[:-1] = NFSR[1:]
-        NFSR[-1] = gx
-        yield hx
+        fy = f(Y)
+        gx = g(X)
+        hxy = h(X, Y)
+
+        Y[:-1] = Y[1:]
+        Y[-1] = fy
+        X[:-1] = X[1:]
+        X[-1] = gx
+
+        yield hxy

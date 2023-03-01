@@ -1,5 +1,5 @@
 from libs import *
-from creds import sub_keys as e_keys, dec_sub_keys as d_keys
+from creds import sub_keys as e_keys
 
 def encrypt(msg, keys):
     op = ''

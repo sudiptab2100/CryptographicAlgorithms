@@ -52,9 +52,3 @@ def Permutation(input, reverse=False):
         for i in range(16): op += input[pmap[i]]
 
     return op
-
-def Round(sub_msg, sub_key, reverse=False):
-    mix = KeyMixing(sub_key, sub_msg)
-    sbx = SBox(mix, reverse=reverse)
-    pmt = Permutation(sbx, reverse=reverse)
-    return pmt

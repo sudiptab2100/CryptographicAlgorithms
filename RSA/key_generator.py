@@ -1,5 +1,27 @@
-import random
 import json
+
+def KSA(seed, N=1024):
+    key = bin(int.from_bytes(seed.encode(), 'big'))[2:]
+    S = []
+    n = len(key)
+    for i in range(N):
+        S.append(i)
+    j = 0
+    for i in range(N):
+        j = (j + S[i] + ord(key[i % n])) % N
+        S[i], S[j] = S[j], S[i]
+    return S
+
+def PRGA(S, N=1024):
+    i = 0
+    j = 0
+    while(True):
+        i = (i + 1) % N
+        j = (j + S[i]) % N
+
+        S[i], S[j] = S[j], S[i]
+        z = S[(S[i] + S[j]) % N]
+        yield z % 2
 
 def isMillerRabinPrime(num):
     s = num - 1
@@ -7,8 +29,9 @@ def isMillerRabinPrime(num):
     while s % 2 == 0:
         s = s // 2
         t += 1
-
-    for trials in range(5): # try to falsify num's primality 5 times
+    
+    for trials in range(5):
+        import random
         a = random.randrange(2, num - 1)
         v = pow(a, s, num)
         if v != 1:
@@ -32,11 +55,19 @@ def isPrime(num):
 
     return isMillerRabinPrime(num)
 
-def generateLargePrime(keysize=1024):
+def generateNBitRandom(seed, N):
+    S = KSA(seed, N)
+    nextRandom = PRGA(S, N)
     while True:
-        num = random.randrange(2 ** (keysize - 1), 2 ** keysize)
-        if isPrime(num):
-            return num
+        op = ""
+        for i in range(N): op += str(next(nextRandom))
+        yield op
+
+def generateLargePrime(start, keysize=1024):
+    num = start
+    while True:
+        if isPrime(num): return num
+        else: num += 2
 
 def modInverse(A, M):
     m0 = M
@@ -63,14 +94,18 @@ def modInverse(A, M):
 
 
 keySize = int(input('Key Size: '))
-p = generateLargePrime(keySize)
-q = generateLargePrime(keySize)
+seed = input('Seed: ')
+
+nextRandom = generateNBitRandom(seed, keySize - 2)
+
+p = generateLargePrime(int('1' + next(nextRandom) + '1', 2), keySize)
+q = generateLargePrime(int('1' + next(nextRandom) + '1', 2), keySize)
 n = p * q
 phi_n = (p - 1) * (q - 1)
 
 while True:
+    e = int(next(nextRandom) + next(nextRandom), 2)
     try:
-        e = random.randrange(1, phi_n)
         d = modInverse(e, phi_n)
         
         print("p:", hex(p))
@@ -88,10 +123,8 @@ while True:
         creds['phi_n'] = hex(phi_n)
         creds['e'] = hex(e)
         creds['d'] = hex(d)
-        with open("RSA/creds.json", "w") as outfile:
-            json.dump(creds, outfile)
+        with open("RSA/creds.json", "w") as outfile: json.dump(creds, outfile)
 
         break
 
-    except:
-        continue
+    except: e += 1

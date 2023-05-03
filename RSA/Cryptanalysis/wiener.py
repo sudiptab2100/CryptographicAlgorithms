@@ -1,4 +1,6 @@
 import math
+from fractions import Fraction as frac
+from sympy import Symbol, solve
 
 def modInverse(A, M):
     m0 = M
@@ -14,10 +16,10 @@ def modInverse(A, M):
         M = A % M
         A = t
         t = y
-
+        
         y = x - q * y
         x = t
-
+    
     if (x < 0): x = x + m0
     
     return x
@@ -32,45 +34,52 @@ def continued_fraction(a, b):
         result = [q] + cf
         return result
 
-def wiener_attack(N, e):
-    result = [0, 0]
-    phiN = N - 1
-    d = 0
+def rev_continued_fraction(cf):
+    if cf == [0]: return 0
+    rev_cf = cf[::-1]
+    d = rev_cf[0]
+    op = frac(1, d)
+    for n in rev_cf[1: ]:
+        op += n
+        op = 1 / op
+    
+    return op
 
-    # Compute continued fractions until convergence
-    cf = continued_fraction(phiN, e)
-    for k in cf:
-        # Compute numerator and denominator of the next convergent
-        if result == [0, 0]:
-            num = k
-            den = 1
-        elif result[1] == 0:
-            num = k
-            den = 1
-        else:
-            num = k * result[0] + result[1]
-            den = result[0]
+def wiener(N, e):
+    cf = continued_fraction(N, e)
+    cf_len = len(cf)
+    d_max = pow(N, 1 / 4) / 3
 
-        # Compute candidate private key
-        candidateD = modInverse(e, num * den) * num
+    for i in range(0, cf_len):
+        f = rev_continued_fraction(cf[: i + 1])
+        k, d = f.numerator, f.denominator
+        if d < d_max: 
+            phiN = (e * d - 1) / k
+            
+            x = Symbol('x')
+            expression = x ** 2 - (N - phiN + 1) * x + N
+            roots = solve(expression, dict=False)
+            p, q = int(roots[0]), int(roots[1])
+            if N == p * q:
+                return [p, q]
+    
+    return None
 
-        # Check if candidate is correct
-        candidateN = pow(N, candidateD, phiN)
-        if candidateN == 1:
-            d = candidateD
-            break
 
-        result[0] = num
-        result[1] = den
+N = int(input("N: "))
+e = int(input("e: "))
 
-    if d == 0:
-        raise ValueError("Failed to find private key")
+factors = wiener(N, e)
 
-    return [d, phiN // d]
+if factors != None:
+    print("p = " + str(factors[0]))
+    print("q = " + str(factors[1]))
 
-N = 160523347
-e = 60728973
-factors = wiener_attack(N, e)
+# N = 90581
+# e = 17993
 
-print("p = " + str(factors[0]))
-print("q = " + str(factors[1]))
+# N = 160523347
+# e = 60728973
+
+# N = 317940011
+# e = 77537081
